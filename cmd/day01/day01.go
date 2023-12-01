@@ -29,15 +29,16 @@ func main() {
 }
 
 func extractCalibrationValue(line string) int {
-	var firstDigit rune = 0
-	var lastDigit rune = 0
+	var firstDigit int = -1
+	var lastDigit int = -1
 	for _, char := range line {
 		if '0' <= char && char <= '9' {
-			if firstDigit == 0 {
-				firstDigit = char
+			digit := int(char - '0')
+			if firstDigit == -1 {
+				firstDigit = digit
 			}
-			lastDigit = char
+			lastDigit = digit
 		}
 	}
-	return int(firstDigit-'0')*10 + int(lastDigit-'0')
+	return firstDigit*10 + lastDigit
 }
