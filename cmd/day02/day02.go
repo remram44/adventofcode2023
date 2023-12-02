@@ -19,19 +19,22 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	sumOfIDs := 0
+	sumOfPowers := 0
 
 	// Iterate on lines
 	for fileScanner.Scan() {
-		gameID, isPossible := checkGame(fileScanner.Text())
+		gameID, isPossible, power := checkGame(fileScanner.Text())
 		if isPossible {
 			sumOfIDs += gameID
 		}
+		sumOfPowers += power
 	}
 
 	fmt.Println(sumOfIDs)
+	fmt.Println(sumOfPowers)
 }
 
-func checkGame(line string) (int, bool) {
+func checkGame(line string) (int, bool, int) {
 	// Check prefix
 	if !strings.HasPrefix(line, "Game ") {
 		log.Fatalf("Invalid line: %v", line)
@@ -45,11 +48,23 @@ func checkGame(line string) (int, bool) {
 	}
 	pos += 2
 
+	minRed, minGreen, minBlue := 0, 0, 0
+
 	// Read revealed cubes
 	isPossible := true
 	for {
 		var red, green, blue int
 		pos, red, green, blue = readRevealedCubes(line, pos)
+
+		if red > minRed {
+			minRed = red
+		}
+		if green > minGreen {
+			minGreen = green
+		}
+		if blue > minBlue {
+			minBlue = blue
+		}
 
 		// Check
 		isPossible = isPossible && red <= 12 && green <= 13 && blue <= 14
@@ -64,7 +79,9 @@ func checkGame(line string) (int, bool) {
 		}
 	}
 
-	return gameID, isPossible
+	power := minRed * minGreen * minBlue
+
+	return gameID, isPossible, power
 }
 
 func readNumber(line string, pos int) (int, int) {
