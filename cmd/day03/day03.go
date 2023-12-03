@@ -33,12 +33,13 @@ func isThereSymbol(line string, fromPos int, toPos int) bool {
 
 type Parser struct {
 	sumOfPartNumbers int
+	sumOfGearRatios  int
 }
 
 func (parser *Parser) Parse(lines []string) {
 	log.Printf("Parse(\n    \"%v\"\n    \"%v\"\n    \"%v\"\n)", lines[0], lines[1], lines[2])
 
-	// Iterate on the current line
+	// Iterate on the current line to find part numbers
 	num := 0
 	numStart := -1
 	for pos, char := range lines[1] + "." {
@@ -69,6 +70,42 @@ func (parser *Parser) Parse(lines []string) {
 			}
 
 			numStart = -1
+		}
+	}
+
+	// Iterate on the current line to find gears
+	for gearPos, char := range lines[1] + "." {
+		if char != '*' {
+			continue
+		}
+		var neighboringNumbers []int
+		for _, line := range lines {
+			num := 0
+			numStart := -1
+
+			// Iterate on each line to find part numbers
+			for pos, char := range line + "." {
+				if '0' <= char && char <= '9' {
+					// Read the number
+					if numStart == -1 {
+						numStart = pos
+						num = 0
+					}
+					num = num*10 + int(char-'0')
+				} else if numStart != -1 {
+					// Add to the list if adjacent
+					if numStart-1 <= gearPos && gearPos <= pos {
+						neighboringNumbers = append(neighboringNumbers, num)
+					}
+					numStart = -1
+				}
+			}
+		}
+
+		// If exactly two, multiply
+		if len(neighboringNumbers) == 2 {
+			log.Printf("found gear pos %v: neighbors %v, %v", gearPos, neighboringNumbers[0], neighboringNumbers[1])
+			parser.sumOfGearRatios += neighboringNumbers[0] * neighboringNumbers[1]
 		}
 	}
 }
@@ -106,4 +143,5 @@ func main() {
 	parser.Parse(lines[0:3])
 
 	fmt.Println(parser.sumOfPartNumbers)
+	fmt.Println(parser.sumOfGearRatios)
 }
