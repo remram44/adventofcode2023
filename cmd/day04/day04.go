@@ -23,13 +23,22 @@ func main() {
 	// Iterate on lines
 	winnings := 0
 	for fileScanner.Scan() {
-		winnings += countWinnings(fileScanner.Text())
+		matchingNumbers := countMatchingNumbers(fileScanner.Text())
+		winnings += scoreForMatches(matchingNumbers)
 	}
 
 	fmt.Println(winnings)
 }
 
-func countWinnings(line string) int {
+func scoreForMatches(matchingNumbers int) int {
+	if matchingNumbers == 0 {
+		return 0
+	} else {
+		return 1 << (matchingNumbers - 1)
+	}
+}
+
+func countMatchingNumbers(line string) int {
 	log.Printf("countWinnings(\"%v\")", line)
 
 	if !strings.HasPrefix(line, "Card ") {
@@ -76,9 +85,5 @@ func countWinnings(line string) int {
 		}
 	}
 
-	if matchingNumbers == 0 {
-		return 0
-	} else {
-		return 1 << (matchingNumbers - 1)
-	}
+	return matchingNumbers
 }
