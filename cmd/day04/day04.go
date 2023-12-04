@@ -21,13 +21,30 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	// Iterate on lines
-	winnings := 0
+	winningsPart1 := 0
+	cardDuplicates := make(map[int]int)
+	totalCardsPart2 := 0
+	cardID := 0
 	for fileScanner.Scan() {
-		matchingNumbers := countMatchingNumbers(fileScanner.Text())
-		winnings += scoreForMatches(matchingNumbers)
+		cardID += 1
+
+		log.Printf("card ID %v (duplicates: %v)", cardID, cardDuplicates[cardID])
+		matchingNumbers := countMatchingNumbers(fileScanner.Text(), cardID)
+		log.Printf("matchingNumbers = %v", matchingNumbers)
+
+		// Score for part 1
+		winningsPart1 += scoreForMatches(matchingNumbers)
+
+		// Duplicate cards for part 2
+		log.Printf("Duplicate next %v cards %v times\n\n", matchingNumbers, 1+cardDuplicates[cardID])
+		for i := 1; i <= matchingNumbers; i += 1 {
+			cardDuplicates[cardID+i] += 1 + cardDuplicates[cardID]
+		}
+		totalCardsPart2 += 1 + cardDuplicates[cardID]
 	}
 
-	fmt.Println(winnings)
+	fmt.Println(winningsPart1)
+	fmt.Println(totalCardsPart2)
 }
 
 func scoreForMatches(matchingNumbers int) int {
@@ -38,7 +55,7 @@ func scoreForMatches(matchingNumbers int) int {
 	}
 }
 
-func countMatchingNumbers(line string) int {
+func countMatchingNumbers(line string, expectedCardID int) int {
 	log.Printf("countWinnings(\"%v\")", line)
 
 	if !strings.HasPrefix(line, "Card ") {
@@ -50,7 +67,9 @@ func countMatchingNumbers(line string) int {
 
 	var cardID int
 	pos, cardID = aoc.ReadNumber(line, pos)
-	log.Printf("card ID %v", cardID)
+	if cardID != expectedCardID {
+		log.Fatalf("Unexpected cardID: %v != %v", cardID, expectedCardID)
+	}
 
 	if pos >= len(line) || line[pos] != ':' {
 		log.Fatal("Missing colon")
