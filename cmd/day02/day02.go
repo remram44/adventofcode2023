@@ -6,6 +6,8 @@ import "log"
 import "os"
 import "strings"
 
+import "github.com/remram44/adventofcode2023"
+
 func main() {
 	// Open the input file
 	readFile, err := os.Open("inputs/day02.txt")
@@ -41,7 +43,7 @@ func checkGame(line string) (int, bool, int) {
 	}
 
 	// Read game ID
-	pos, gameID := readNumber(line, 5)
+	pos, gameID := aoc.ReadNumber(line, 5)
 
 	if line[pos] != ':' || line[pos+1] != ' ' {
 		log.Fatalf("Missing colon at %v: %v", pos, line)
@@ -84,27 +86,13 @@ func checkGame(line string) (int, bool, int) {
 	return gameID, isPossible, power
 }
 
-func readNumber(line string, pos int) (int, int) {
-	num := 0
-	for {
-		char := line[pos]
-		if '0' <= char && char <= '9' {
-			num = num*10 + int(char-'0')
-		} else {
-			break
-		}
-		pos += 1
-	}
-	return pos, num
-}
-
 func readRevealedCubes(line string, pos int) (int, int, int, int) {
 	red, green, blue := 0, 0, 0
 
 	for {
 		// Read the number of cubes
 		var num int
-		pos, num = readNumber(line, pos)
+		pos, num = aoc.ReadNumber(line, pos)
 		if line[pos] != ' ' {
 			log.Fatalf("Missing space at %v: %v", pos, line)
 		}
