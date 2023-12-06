@@ -5,6 +5,7 @@ import "fmt"
 import "log"
 import "math"
 import "os"
+import "strconv"
 import "strings"
 
 import "github.com/remram44/adventofcode2023"
@@ -39,6 +40,18 @@ func countRaceWinOptions(time int, distanceRecord int) int {
 	root2 := (timef + math.Sqrt(delta)) / 2.0
 
 	return int(math.Floor(root2)) - int(math.Ceil(root1)) + 1
+}
+
+func combineNumbers(numbers []int) int {
+	asString := ""
+	for _, number := range numbers {
+		asString += fmt.Sprint(number)
+	}
+	number, err := strconv.Atoi(asString)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return number
 }
 
 func main() {
@@ -95,4 +108,10 @@ func main() {
 	}
 
 	fmt.Println(result)
+
+	// Part 2: combine the numbers
+	fmt.Println(countRaceWinOptions(
+		combineNumbers(times),
+		combineNumbers(distanceRecords),
+	))
 }
