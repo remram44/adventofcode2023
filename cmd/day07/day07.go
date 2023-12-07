@@ -47,11 +47,23 @@ type hand struct {
 	hand     string
 }
 
-func newHand(handStr string) hand {
+type input struct {
+	hand string
+	bid  int
+}
+
+func newHand(handStr string, part int) hand {
 	// Count each card
 	cards := make(map[rune]int)
 	for _, card := range handStr {
 		cards[card] += 1
+	}
+
+	// For part 2, jokers are special
+	jokers := 0
+	if part == 2 {
+		jokers = cards['J']
+		delete(cards, 'J')
 	}
 
 	// Make a sorted array of cards by count
@@ -63,22 +75,32 @@ func newHand(handStr string) hand {
 
 	var handType handType
 	switch {
-	case slices.Equal(counts, []int{5}):
+	case jokers == 5:
 		handType = fiveOfAKind
-	case slices.Equal(counts, []int{4, 1}):
+	case counts[0]+jokers == 5:
+		handType = fiveOfAKind
+	case counts[0]+jokers == 4:
 		handType = fourOfAKind
 	case slices.Equal(counts, []int{3, 2}):
 		handType = fullHouse
+	case slices.Equal(counts, []int{2, 2}) && jokers == 1:
+		handType = fullHouse
 	case slices.Equal(counts, []int{3, 1, 1}):
+		handType = threeOfAKind
+	case slices.Equal(counts, []int{2, 1, 1}) && jokers == 1:
+		handType = threeOfAKind
+	case slices.Equal(counts, []int{1, 1, 1}) && jokers == 2:
 		handType = threeOfAKind
 	case slices.Equal(counts, []int{2, 2, 1}):
 		handType = twoPair
 	case slices.Equal(counts, []int{2, 1, 1, 1}):
 		handType = onePair
+	case slices.Equal(counts, []int{1, 1, 1, 1}) && jokers == 1:
+		handType = onePair
 	case slices.Equal(counts, []int{1, 1, 1, 1, 1}):
 		handType = highCard
 	default:
-		log.Fatalf("Can't figure out hand type: %v %v", handStr, counts)
+		log.Fatalf("Can't figure out hand type: %v %v jokers=%v", handStr, counts, jokers)
 	}
 
 	return hand{
@@ -92,7 +114,7 @@ type handBid struct {
 	bid  int
 }
 
-func faceRank(card byte) int {
+func faceRank(card byte, part int) int {
 	switch card {
 	case 'A':
 		return 14
@@ -101,7 +123,12 @@ func faceRank(card byte) int {
 	case 'Q':
 		return 12
 	case 'J':
-		return 11
+		if part == 1 {
+			return 11
+		} else {
+			// Weakest card in part 2
+			return 1
+		}
 	case 'T':
 		return 10
 	default:
@@ -122,13 +149,13 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	// Iterate on lines to read bids
-	var bids []handBid
+	var inputs []input
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		if len(line) < 6 {
 			log.Fatalf("Line too short: %v", line)
 		}
-		handStr := line[0:5]
+		hand := line[0:5]
 		if line[5] != ' ' {
 			log.Fatal("Missing separator")
 		}
@@ -137,37 +164,45 @@ func main() {
 			log.Fatal("Extra content on line")
 		}
 
-		bids = append(bids, handBid{newHand(handStr), bid})
+		inputs = append(inputs, input{hand, bid})
 	}
 
-	// Sort bids
-	sort.Slice(bids, func(a int, b int) bool {
-		// Compare hand types
-		if bids[a].hand.handType < bids[b].hand.handType {
-			return true
-		} else if bids[a].hand.handType > bids[b].hand.handType {
-			return false
+	for part := 1; part <= 2; part += 1 {
+		// Parse hands, make bids array
+		var bids []handBid
+		for _, input := range inputs {
+			bids = append(bids, handBid{newHand(input.hand, part), input.bid})
 		}
 
-		// Compare the hands themselves
-		for i := 0; i < 5; i += 1 {
-			faceA := faceRank(bids[a].hand.hand[i])
-			faceB := faceRank(bids[b].hand.hand[i])
-			if faceA < faceB {
+		// Sort bids
+		sort.Slice(bids, func(a int, b int) bool {
+			// Compare hand types
+			if bids[a].hand.handType < bids[b].hand.handType {
 				return true
-			} else if faceA > faceB {
+			} else if bids[a].hand.handType > bids[b].hand.handType {
 				return false
 			}
+
+			// Compare the hands themselves
+			for i := 0; i < 5; i += 1 {
+				faceA := faceRank(bids[a].hand.hand[i], part)
+				faceB := faceRank(bids[b].hand.hand[i], part)
+				if faceA < faceB {
+					return true
+				} else if faceA > faceB {
+					return false
+				}
+			}
+			return false
+		})
+
+		// Compute the total score
+		score := 0
+		for rank, bid := range bids {
+			fmt.Printf("%v %v\n", bid.hand.hand, bid.hand.handType)
+			score += (rank + 1) * bid.bid
 		}
-		return false
-	})
 
-	// Compute the total score
-	score := 0
-	for rank, bid := range bids {
-		fmt.Printf("%v %v\n", bid.hand.hand, bid.hand.handType)
-		score += (rank + 1) * bid.bid
+		fmt.Println(score)
 	}
-
-	fmt.Println(score)
 }
