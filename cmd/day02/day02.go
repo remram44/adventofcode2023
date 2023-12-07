@@ -41,9 +41,10 @@ func checkGame(line string) (int, bool, int) {
 	if !strings.HasPrefix(line, "Game ") {
 		log.Fatalf("Invalid line: %v", line)
 	}
+	pos := 5
 
 	// Read game ID
-	pos, gameID := aoc.ReadNumber(line, 5)
+	pos, gameID := aoc.ReadNumber(line, pos)
 
 	if line[pos] != ':' || line[pos+1] != ' ' {
 		log.Fatalf("Missing colon at %v: %v", pos, line)
@@ -73,12 +74,10 @@ func checkGame(line string) (int, bool, int) {
 
 		if pos >= len(line) {
 			break
-		} else {
-			if pos+1 >= len(line) || line[pos] != ';' || line[pos+1] != ' ' {
-				log.Fatalf("Missing semicolon at %v: %v", pos, line)
-			}
-			pos += 2
+		} else if pos+1 >= len(line) || line[pos] != ';' || line[pos+1] != ' ' {
+			log.Fatalf("Missing semicolon at %v: %v", pos, line)
 		}
+		pos += 2
 	}
 
 	power := minRed * minGreen * minBlue

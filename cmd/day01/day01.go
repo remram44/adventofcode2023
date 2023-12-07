@@ -33,8 +33,8 @@ func main() {
 }
 
 func extractCalibrationValueFromDigits(line string) int {
-	var firstDigit int = -1
-	var lastDigit int = -1
+	var firstDigit = -1
+	var lastDigit = -1
 	for _, char := range line {
 		if '0' <= char && char <= '9' {
 			digit := int(char - '0')
@@ -48,8 +48,8 @@ func extractCalibrationValueFromDigits(line string) int {
 }
 
 func extractCalibrationValueFromDigitsAndLetters(line string) int {
-	var firstDigit int = -1
-	var lastDigit int = -1
+	var firstDigit = -1
+	var lastDigit = -1
 	for pos, char := range line {
 		digit := -1
 		if '0' <= char && char <= '9' {

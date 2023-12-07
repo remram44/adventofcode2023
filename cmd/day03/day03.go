@@ -124,6 +124,7 @@ func main() {
 
 	parser := Parser{
 		sumOfPartNumbers: 0,
+		sumOfGearRatios:  0,
 	}
 
 	// Iterate on lines

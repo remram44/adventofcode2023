@@ -45,7 +45,7 @@ func countRaceWinOptions(time int, distanceRecord int) int {
 func combineNumbers(numbers []int) int {
 	asString := ""
 	for _, number := range numbers {
-		asString += fmt.Sprint(number)
+		asString += strconv.Itoa(number)
 	}
 	number, err := strconv.Atoi(asString)
 	if err != nil {

@@ -40,6 +40,7 @@ func parseAlmanac(seedsAreRanges bool) {
 
 	// Read seeds into the "numbers" array
 	if !fileScanner.Scan() {
+		log.Fatal("Can't read first line")
 	}
 	line := fileScanner.Text()
 	if !strings.HasPrefix(line, "seeds: ") {
@@ -99,10 +100,10 @@ func parseAlmanac(seedsAreRanges bool) {
 			}
 
 			pos := 0
-			var dest_start, src_start, length int
-			pos, dest_start = aoc.ReadNumber(entry, pos)
+			var destStart, srcStart, length int
+			pos, destStart = aoc.ReadNumber(entry, pos)
 			pos += 1
-			pos, src_start = aoc.ReadNumber(entry, pos)
+			pos, srcStart = aoc.ReadNumber(entry, pos)
 			pos += 1
 			pos, length = aoc.ReadNumber(entry, pos)
 			if pos != len(entry) {
@@ -111,10 +112,10 @@ func parseAlmanac(seedsAreRanges bool) {
 
 			// Change numbers via this map entry
 			changeFrom := sort.Search(len(numbers), func(i int) bool {
-				return src_start < numbers[i].start+numbers[i].length
+				return srcStart < numbers[i].start+numbers[i].length
 			})
 			changeTo := sort.Search(len(numbers), func(i int) bool {
-				return numbers[i].start >= src_start+length
+				return numbers[i].start >= srcStart+length
 			})
 			for i := changeFrom; i < changeTo; i += 1 {
 				// Only map once
@@ -125,27 +126,27 @@ func parseAlmanac(seedsAreRanges bool) {
 				var leftOver []NumberRange
 
 				// Add the first part of the range, that isn't getting mapped
-				if numbers[i].start < src_start {
+				if numbers[i].start < srcStart {
 					leftOver = append(leftOver, NumberRange{
 						start:  numbers[i].start,
-						length: src_start - numbers[i].start,
+						length: srcStart - numbers[i].start,
 					})
-					numbers[i].length -= src_start - numbers[i].start
-					numbers[i].start = src_start
+					numbers[i].length -= srcStart - numbers[i].start
+					numbers[i].start = srcStart
 				}
 
 				// Add the last part of the range, that isn't getting mapped
-				if numbers[i].start+numbers[i].length > src_start+length {
+				if numbers[i].start+numbers[i].length > srcStart+length {
 					leftOver = append(leftOver, NumberRange{
-						start:  src_start + length,
-						length: numbers[i].start + numbers[i].length - src_start - length,
+						start:  srcStart + length,
+						length: numbers[i].start + numbers[i].length - srcStart - length,
 					})
-					numbers[i].length = src_start + length - numbers[i].start
+					numbers[i].length = srcStart + length - numbers[i].start
 				}
 
 				// Map the range over
 				newNumbers = append(newNumbers, NumberRange{
-					start:  numbers[i].start + dest_start - src_start,
+					start:  numbers[i].start + destStart - srcStart,
 					length: numbers[i].length,
 				})
 
