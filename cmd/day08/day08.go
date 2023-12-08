@@ -78,16 +78,26 @@ func main() {
 	// Follow the directions in part 1
 	fmt.Println(runThroughNetwork(directions, network, "AAA", false))
 
-	// Find starting nodes for part 2, count steps to get to exit
-	var reachedZ []int
+	// Find starting nodes for part 2, count steps to get to exit, in parallel
+	stepsChannel := make(chan int)
+	numParallel := 0
 	for node := range network {
 		if node[2] == 'A' {
-			reachedZ = append(reachedZ, runThroughNetwork(directions, network, node, true))
+			go func(node string) {
+				stepsChannel <- runThroughNetwork(directions, network, node, true)
+			}(node)
+			numParallel += 1
 		}
 	}
 
+	// Collect into array
+	stepsArray := make([]int, numParallel)[0:0]
+	for i := 0; i < numParallel; i += 1 {
+		stepsArray = append(stepsArray, <-stepsChannel)
+	}
+
 	// Part 2 answer is the least common multiple of those numbers
-	fmt.Println(leastCommonMultiple(reachedZ))
+	fmt.Println(leastCommonMultiple(stepsArray))
 }
 
 func leastCommonMultiple(numbers []int) int {
