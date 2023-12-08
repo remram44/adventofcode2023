@@ -5,6 +5,28 @@ import "fmt"
 import "log"
 import "os"
 
+func runThroughNetwork(directions []int, network map[string][2]string, start string, singleZ bool) int {
+	steps := 0
+	currentNode := start
+	for {
+		if singleZ {
+			if currentNode[2] == 'Z' {
+				break
+			}
+		} else {
+			if currentNode == "ZZZ" {
+				break
+			}
+		}
+
+		direction := directions[steps%len(directions)]
+		steps += 1
+		currentNode = network[currentNode][direction]
+	}
+
+	return steps
+}
+
 func main() {
 	// Open the input file
 	readFile, err := os.Open("inputs/day08.txt")
@@ -54,59 +76,17 @@ func main() {
 	}
 
 	// Follow the directions in part 1
-	steps := 0
-	currentNode := "AAA"
-	for currentNode != "ZZZ" {
-		direction := directions[steps%len(directions)]
-		steps += 1
-		currentNode = network[currentNode][direction]
-	}
+	fmt.Println(runThroughNetwork(directions, network, "AAA", false))
 
-	fmt.Println(steps)
-
-	// Find starting nodes for part 2
-	var currentNodes []string
+	// Find starting nodes for part 2, count steps to get to exit
+	var reachedZ []int
 	for node := range network {
 		if node[2] == 'A' {
-			currentNodes = append(currentNodes, node)
-		}
-	}
-	log.Println(currentNodes)
-
-	// Follow the directions in part 2
-	// Stop when each concurrent path has reached an exit *once*
-	steps = 0
-	reachedZ := make([]int, len(currentNodes))
-	for i := 0; i < len(currentNodes); i += 1 {
-		reachedZ[i] = -1
-	}
-	for {
-		allDone := true
-		for i, node := range currentNodes {
-			reached := reachedZ[i]
-			if reached == -1 {
-				if node[2] == 'Z' {
-					log.Printf("starting node %v reached %v after %v steps", i, node, steps)
-					reachedZ[i] = steps
-				} else {
-					allDone = false
-				}
-			}
-		}
-
-		if allDone {
-			break
-		}
-
-		// Follow directions
-		direction := directions[steps%len(directions)]
-		steps += 1
-		for i := range currentNodes {
-			currentNodes[i] = network[currentNodes[i]][direction]
+			reachedZ = append(reachedZ, runThroughNetwork(directions, network, node, true))
 		}
 	}
 
-	// Now find the least common multiple of those numbers
+	// Part 2 answer is the least common multiple of those numbers
 	fmt.Println(leastCommonMultiple(reachedZ))
 }
 
