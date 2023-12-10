@@ -205,48 +205,152 @@ func main() {
 		}
 	}
 
-	// Print maps
-	//{
-	//	var dir direction
-	//	for dir = 0; dir < 4; dir += 1 {
-	//		log.Printf("Distance map for starting direction %v", dir)
-	//		for y := 0; y < sizeY; y += 1 {
-	//			line := ""
-	//			for x := 0; x < sizeX; x += 1 {
-	//				distance, ok := distancesPerDir[dir][Position{x: x, y: y}]
-	//				if ok {
-	//					line += fmt.Sprintf("% 4d", distance)
-	//				} else {
-	//					line += "    "
-	//				}
-	//			}
-	//			log.Print(line)
-	//		}
-	//	}
-	//}
-
 	// Now the result is the maximum tile that is in two maps
 	maxMinDistance := 0
+	var maxLoop map[Position]int
 	for y := 0; y < sizeY; y += 1 {
 		for x := 0; x < sizeX; x += 1 {
 			count := 0
 			minDistance := sizeX * sizeY
 			var dir direction
+			var minDirection direction
 			for dir = 0; dir < 4; dir += 1 {
 				distance, present := distancesPerDir[dir][Position{x: x, y: y}]
 				if present {
 					count += 1
 					if distance < minDistance {
 						minDistance = distance
+						minDirection = dir
 					}
 				}
 			}
 
 			if count >= 2 && minDistance > maxMinDistance {
 				maxMinDistance = minDistance
+				maxLoop = distancesPerDir[minDirection]
 			}
 		}
 	}
 
 	fmt.Println(maxMinDistance)
+
+	// For part 2, we build an array 3 times as big as the field
+	// plus 1 on each edge
+	// Example:
+	// F- turns into:
+	// . ... ... .
+	//
+	// . ... ... .
+	// . .xx xxx .
+	// . .x. ... .
+	//
+	// . ... ... .
+	floodableField := make([]bool, (sizeX*3+2)*(sizeY*3+2))
+	set := func(xt, yt, xr, yr int) {
+		x := 2 + xt*3 + xr
+		y := 2 + yt*3 + yr
+		floodableField[y*(sizeX*3+2)+x] = true
+	}
+	get := func(xt, yt, xr, yr int) bool {
+		x := 2 + xt*3 + xr
+		y := 2 + yt*3 + yr
+		return floodableField[y*(sizeX*3+2)+x]
+	}
+	for y := 0; y < sizeY; y += 1 {
+		for x := 0; x < sizeX; x += 1 {
+			pos := Position{x: x, y: y}
+			_, present := maxLoop[pos]
+			if !present {
+				continue
+			}
+			tile := field[pos]
+			if tile&up != 0 {
+				set(x, y, 0, 0)
+				set(x, y, 0, -1)
+			}
+			if tile&left != 0 {
+				set(x, y, 0, 0)
+				set(x, y, -1, 0)
+			}
+			if tile&right != 0 {
+				set(x, y, 0, 0)
+				set(x, y, 1, 0)
+			}
+			if tile&down != 0 {
+				set(x, y, 0, 0)
+				set(x, y, 0, 1)
+			}
+		}
+	}
+
+	// Add the start
+	for y := -1; y <= 1; y += 1 {
+		for x := -1; x <= 1; x += 1 {
+			set(startingPos.x, startingPos.y, x, y)
+		}
+	}
+
+	// Print the floodable field
+	for y := 0; y < sizeY*3+2; y += 1 {
+		line := ""
+		for x := 0; x < sizeX*3+2; x += 1 {
+			if floodableField[y*(sizeX*3+2)+x] {
+				line += "."
+			} else {
+				line += " "
+			}
+		}
+		log.Print(line, "<")
+	}
+
+	// Now flood
+	flood(floodableField, sizeX*3+2, sizeY*3+2)
+
+	// Print the area
+	for y := 0; y < sizeY*3+2; y += 1 {
+		line := ""
+		for x := 0; x < sizeX*3+2; x += 1 {
+			if floodableField[y*(sizeX*3+2)+x] {
+				line += "."
+			} else if x%3 == 2 && y%3 == 2 {
+				line += "I"
+			} else {
+				line += " "
+			}
+		}
+		log.Print(line, "<")
+	}
+
+	// Count the area
+	area := 0
+	for y := 0; y < sizeY; y += 1 {
+		for x := 0; x < sizeX; x += 1 {
+			if !get(x, y, 0, 0) {
+				area += 1
+			}
+		}
+	}
+
+	fmt.Println(area)
+}
+
+func flood(field []bool, sizeX int, sizeY int) {
+	openList := make(map[Position]interface{})
+	openList[Position{x: 0, y: 0}] = nil
+	for len(openList) > 0 {
+		for pos := range openList {
+			delete(openList, pos)
+			if !field[pos.y*sizeX+pos.x] {
+				field[pos.y*sizeX+pos.x] = true
+				for y := -1; y <= 1; y += 1 {
+					for x := -1; x <= 1; x += 1 {
+						neighbor := Position{x: pos.x + x, y: pos.y + y}
+						if neighbor.x >= 0 && neighbor.x < sizeX && neighbor.y >= 0 && neighbor.y < sizeY {
+							openList[neighbor] = nil
+						}
+					}
+				}
+			}
+		}
+	}
 }
