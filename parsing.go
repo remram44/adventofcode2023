@@ -17,6 +17,11 @@ func ReadSpaces(line string, pos int) int {
 
 func ReadNumber(line string, pos int) (int, int) {
 	num := 0
+	sign := 1
+	if line[pos] == '-' {
+		sign = -1
+		pos += 1
+	}
 	if line[pos] < '0' || line[pos] > '9' {
 		log.Fatalf("Not a number at pos %v", pos)
 	}
@@ -29,5 +34,5 @@ func ReadNumber(line string, pos int) (int, int) {
 		}
 		pos += 1
 	}
-	return pos, num
+	return pos, sign * num
 }
