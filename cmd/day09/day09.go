@@ -4,6 +4,7 @@ import "bufio"
 import "fmt"
 import "log"
 import "os"
+import "slices"
 
 import "github.com/remram44/adventofcode2023"
 
@@ -20,7 +21,8 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	// Iterate on lines
-	total := 0
+	total1 := 0
+	total2 := 0
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 
@@ -34,14 +36,20 @@ func main() {
 			series = append(series, number)
 		}
 
-		// Extrapolate
-		total += extrapolateSeries(series)
+		// Extrapolate forward
+		total1 += extrapolateSeries(series, 1)
+
+		// Extrapolate backwards
+		slices.Reverse(series)
+		total2 += extrapolateSeries(series, -1)
 	}
 
-	fmt.Println(total)
+	fmt.Println(total1)
+	fmt.Println(total2)
 }
 
-func extrapolateSeries(series []int) int {
+func extrapolateSeries(series []int, sign int) int {
+	fmt.Println(series)
 	allZeroes := true
 	for _, elem := range series {
 		if elem != 0 {
@@ -55,10 +63,10 @@ func extrapolateSeries(series []int) int {
 	} else {
 		var derivedSeries []int
 		for i := 0; i < len(series)-1; i += 1 {
-			derivedSeries = append(derivedSeries, series[i+1]-series[i])
+			derivedSeries = append(derivedSeries, sign*(series[i+1]-series[i]))
 		}
 
-		extrapolated := extrapolateSeries(derivedSeries)
-		return series[len(series)-1] + extrapolated
+		extrapolated := extrapolateSeries(derivedSeries, sign)
+		return series[len(series)-1] + sign*extrapolated
 	}
 }
