@@ -108,7 +108,7 @@ func doWithExpansion(initialUniverse [][]bool, sizeX int, sizeY int, expansion i
 	// For each pair, find shortest path
 	sumShortestDistances := 0
 	for i := 0; i < len(galaxies); i += 1 {
-		for j := 0; j < len(galaxies); j += 1 {
+		for j := i + 1; j < len(galaxies); j += 1 {
 			if i == j {
 				continue
 			}
@@ -117,5 +117,5 @@ func doWithExpansion(initialUniverse [][]bool, sizeX int, sizeY int, expansion i
 		}
 	}
 
-	fmt.Println(sumShortestDistances / 2)
+	fmt.Println(sumShortestDistances)
 }
