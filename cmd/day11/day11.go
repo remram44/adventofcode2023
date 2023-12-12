@@ -52,6 +52,11 @@ func main() {
 	sizeY := len(initialUniverse)
 	log.Printf("initialUniverse %vx%v", sizeX, sizeY)
 
+	doWithExpansion(initialUniverse, sizeX, sizeY, 2)
+	doWithExpansion(initialUniverse, sizeX, sizeY, 1000000)
+}
+
+func doWithExpansion(initialUniverse [][]bool, sizeX int, sizeY int, expansion int) {
 	// Find mapping of initial Y pos to expanded pos
 	var mapY []int
 	dest := 0
@@ -65,7 +70,7 @@ func main() {
 		}
 		mapY = append(mapY, dest)
 		if rowIsEmpty {
-			dest += 2
+			dest += expansion
 		} else {
 			dest += 1
 		}
@@ -84,7 +89,7 @@ func main() {
 		}
 		mapX = append(mapX, dest)
 		if columnIsEmpty {
-			dest += 2
+			dest += expansion
 		} else {
 			dest += 1
 		}
