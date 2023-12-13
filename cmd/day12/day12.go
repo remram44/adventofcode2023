@@ -4,7 +4,10 @@ import "bufio"
 import "fmt"
 import "log"
 import "os"
+import "runtime"
 //import "strings"
+import "sync"
+import "sync/atomic"
 
 import "github.com/remram44/adventofcode2023"
 
@@ -41,76 +44,101 @@ func main() {
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
 
-	sumOfArrangementsPart1 := 0
-	sumOfArrangementsPart2 := 0
+	// Channel for the inputs
+	lineInputs := make(chan string)
+
+	// Wait group to notice the end
+	var arrangementsWg sync.WaitGroup
+
+	var sumOfArrangementsPart1 int64 = 0
+	var sumOfArrangementsPart2 int64 = 0
+
+	// Create the processing threads
+	numCPU := runtime.GOMAXPROCS(0)
+	log.Printf("Starting %v goroutines", numCPU)
+	for i := 0; i < numCPU; i += 1 {
+		go func() {
+			for {
+				line := <-lineInputs
+
+				// Read sequence of empty/present/unknown springs
+				var sequence []spring
+				pos := 0
+				for pos < len(line) && line[pos] != ' ' {
+					switch line[pos] {
+					case '.':
+						sequence = append(sequence, Empty)
+					case '#':
+						sequence = append(sequence, Present)
+					case '?':
+						sequence = append(sequence, Unknown)
+					case ' ':
+					default:
+						log.Fatalf("Unexpected character %v", line[pos])
+					}
+					pos += 1
+				}
+
+				// Read list of groups
+				var groupSizes []int
+				for pos < len(line) {
+					if line[pos] != ' ' && line[pos] != ',' {
+						log.Fatalf("Invalid separator %v", line[pos])
+					}
+					pos += 1
+					var num int
+					pos, num = aoc.ReadNumber(line, pos)
+					groupSizes = append(groupSizes, num)
+				}
+
+				// Find arrangements for part 1
+				//log.Print(line)
+				arrangements1 := countArrangements(sequence, groupSizes, 0)
+				//log.Printf("%v -> %v", line, arrangements1)
+				//log.Print()
+				atomic.AddInt64(&sumOfArrangementsPart1, int64(arrangements1))
+
+				// Unfold the sequence
+				var sequence2 []spring
+				for i, element := range sequence {
+					if i != 0 {
+						sequence2 = append(sequence2, Unknown)
+					}
+					for j := 0; j < 5; j += 1 {
+						sequence2 = append(sequence2, element)
+					}
+				}
+
+				// Unfold the groups
+				var groupSizes2 []int
+				for _, element := range groupSizes {
+					for j := 0; j < 5; j += 1 {
+						groupSizes2 = append(groupSizes2, element)
+					}
+				}
+
+				// Find arrangements for part 2
+				//log.Printf("%v x5", line)
+				arrangements2 := countArrangements(sequence2, groupSizes2, 0)
+				//log.Printf("%v x5 -> %v", line, arrangements2)
+				//log.Print()
+				atomic.AddInt64(&sumOfArrangementsPart2, int64(arrangements2))
+
+				arrangementsWg.Done()
+			}
+		}()
+	}
 
 	// Iterate on lines
+	lineNum := 0
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
-
-		// Read sequence of empty/present/unknown springs
-		var sequence []spring
-		pos := 0
-		for pos < len(line) && line[pos] != ' ' {
-			switch line[pos] {
-			case '.':
-				sequence = append(sequence, Empty)
-			case '#':
-				sequence = append(sequence, Present)
-			case '?':
-				sequence = append(sequence, Unknown)
-			case ' ':
-			default:
-				log.Fatalf("Unexpected character %v", line[pos])
-			}
-			pos += 1
-		}
-
-		// Read list of groups
-		var groupSizes []int
-		for pos < len(line) {
-			if line[pos] != ' ' && line[pos] != ',' {
-				log.Fatalf("Invalid separator %v", line[pos])
-			}
-			pos += 1
-			var num int
-			pos, num = aoc.ReadNumber(line, pos)
-			groupSizes = append(groupSizes, num)
-		}
-
-		// Find arrangements for part 1
-		log.Print(line)
-		arrangements := countArrangements(sequence, groupSizes, 0)
-		log.Printf("%v -> %v", line, arrangements)
-		log.Print()
-		sumOfArrangementsPart1 += arrangements
-
-		// Unfold the sequence
-		var sequence2 []spring
-		for i, element := range sequence {
-			if i != 0 {
-				sequence2 = append(sequence2, Unknown)
-			}
-			for j := 0; j < 5; j += 1 {
-				sequence2 = append(sequence2, element)
-			}
-		}
-
-		// Unfold the groups
-		var groupSizes2 []int
-		for _, element := range groupSizes {
-			for j := 0; j < 5; j += 1 {
-				groupSizes2 = append(groupSizes2, element)
-			}
-		}
-
-		// Find arrangements for part 2
-		log.Printf("%v x5", line)
-		arrangements = countArrangements(sequence2, groupSizes2, 0)
-		log.Printf("%v x5 -> %v", line, arrangements)
-		log.Print()
-		sumOfArrangementsPart2 += arrangements
+		lineNum += 1
+		arrangementsWg.Add(1)
+		lineInputs <- line
 	}
+
+	arrangementsWg.Wait()
 
 	fmt.Println(sumOfArrangementsPart1)
 
