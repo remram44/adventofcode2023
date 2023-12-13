@@ -4,7 +4,7 @@ import "bufio"
 import "fmt"
 import "log"
 import "os"
-import "strings"
+//import "strings"
 
 import "github.com/remram44/adventofcode2023"
 
@@ -41,7 +41,8 @@ func main() {
 	fileScanner := bufio.NewScanner(readFile)
 	fileScanner.Split(bufio.ScanLines)
 
-	sumOfArrangements := 0
+	sumOfArrangementsPart1 := 0
+	sumOfArrangementsPart2 := 0
 
 	// Iterate on lines
 	for fileScanner.Scan() {
@@ -77,47 +78,74 @@ func main() {
 			groupSizes = append(groupSizes, num)
 		}
 
-		// Find arrangements
+		// Find arrangements for part 1
 		log.Print(line)
 		arrangements := countArrangements(sequence, groupSizes, 0)
 		log.Printf("%v -> %v", line, arrangements)
 		log.Print()
+		sumOfArrangementsPart1 += arrangements
 
-		sumOfArrangements += arrangements
+		// Unfold the sequence
+		var sequence2 []spring
+		for i, element := range sequence {
+			if i != 0 {
+				sequence2 = append(sequence2, Unknown)
+			}
+			for j := 0; j < 5; j += 1 {
+				sequence2 = append(sequence2, element)
+			}
+		}
+
+		// Unfold the groups
+		var groupSizes2 []int
+		for _, element := range groupSizes {
+			for j := 0; j < 5; j += 1 {
+				groupSizes2 = append(groupSizes2, element)
+			}
+		}
+
+		// Find arrangements for part 2
+		log.Printf("%v x5", line)
+		arrangements = countArrangements(sequence2, groupSizes2, 0)
+		log.Printf("%v x5 -> %v", line, arrangements)
+		log.Print()
+		sumOfArrangementsPart2 += arrangements
 	}
 
-	fmt.Println(sumOfArrangements)
+	fmt.Println(sumOfArrangementsPart1)
+
+	fmt.Println(sumOfArrangementsPart2)
 }
 
 func countArrangements(sequence []spring, groupSizes []int, depth int) int {
-	log.Printf("%vcountArrangements(%v, %v)", strings.Repeat(" ", depth), sequence, groupSizes)
+	//log.Printf("%vcountArrangements(%v, %v)", strings.Repeat(" ", depth), sequence, groupSizes)
 	if len(sequence) == 0 {
 		if len(groupSizes) == 0 {
-			log.Printf("%v done, return 1", strings.Repeat(" ", depth))
+			//log.Printf("%v done, return 1", strings.Repeat(" ", depth))
 			return 1
 		} else {
-			log.Printf("%v fail, return 0", strings.Repeat(" ", depth))
+			//log.Printf("%v fail, return 0", strings.Repeat(" ", depth))
 			return 0
 		}
 	}
 
 	switch sequence[0] {
 	case Empty:
-		log.Printf("%v empty, consume sequence", strings.Repeat(" ", depth))
+		//log.Printf("%v empty, consume sequence", strings.Repeat(" ", depth))
 		result := countArrangements(sequence[1:], groupSizes, depth+1)
-		log.Printf("%v return %v", strings.Repeat(" ", depth), result)
+		//log.Printf("%v return %v", strings.Repeat(" ", depth), result)
 		return result
 	case Present:
 		result := countArrangementsIfPresent(sequence, groupSizes, depth)
-		log.Printf("%v return %v", strings.Repeat(" ", depth), result)
+		//log.Printf("%v return %v", strings.Repeat(" ", depth), result)
 		return result
 	case Unknown:
 		total := 0
-		log.Printf("%v try guess absent", strings.Repeat(" ", depth))
+		//log.Printf("%v try guess absent", strings.Repeat(" ", depth))
 		total += countArrangements(sequence[1:], groupSizes, depth+1)
-		log.Printf("%v try guess present", strings.Repeat(" ", depth))
+		//log.Printf("%v try guess present", strings.Repeat(" ", depth))
 		total += countArrangementsIfPresent(sequence, groupSizes, depth)
-		log.Printf("%v return %v", strings.Repeat(" ", depth), total)
+		//log.Printf("%v return %v", strings.Repeat(" ", depth), total)
 		return total
 	default:
 		log.Fatal("Unknown item in sequence")
@@ -127,33 +155,33 @@ func countArrangements(sequence []spring, groupSizes []int, depth int) int {
 
 func countArrangementsIfPresent(sequence []spring, groupSizes []int, depth int) int {
 	if len(groupSizes) == 0 {
-		log.Printf("%v can't consume present, empty group list", strings.Repeat(" ", depth))
+		//log.Printf("%v can't consume present, empty group list", strings.Repeat(" ", depth))
 		return 0
 	}
 	groupSize := groupSizes[0]
 	if groupSize > len(sequence) {
-		log.Printf("%v can't consume present, groupSize=%v len(sequence)=%v", strings.Repeat(" ", depth), groupSize, len(sequence))
+		//log.Printf("%v can't consume present, groupSize=%v len(sequence)=%v", strings.Repeat(" ", depth), groupSize, len(sequence))
 		return 0
 	}
 	for i := 1; i < groupSize; i += 1 {
 		if sequence[i] == Empty {
-			log.Printf("%v found empty spot, return 0", strings.Repeat(" ", depth))
+			//log.Printf("%v found empty spot, return 0", strings.Repeat(" ", depth))
 			return 0
 		}
 	}
 	if groupSize == len(sequence) {
 		if len(groupSizes) == 1 {
-			log.Printf("%v end of sequence, return 1", strings.Repeat(" ", depth))
+			//log.Printf("%v end of sequence, return 1", strings.Repeat(" ", depth))
 			return 1
 		} else {
-			log.Printf("%v end of sequence, return 0", strings.Repeat(" ", depth))
+			//log.Printf("%v end of sequence, return 0", strings.Repeat(" ", depth))
 			return 0
 		}
 	}
 	if sequence[groupSize] == Present {
-		log.Printf("%v group too long, return 0", strings.Repeat(" ", depth))
+		//log.Printf("%v group too long, return 0", strings.Repeat(" ", depth))
 		return 0
 	}
-	log.Printf("%v consume %v present 1 absent", strings.Repeat(" ", depth), groupSize)
+	//log.Printf("%v consume %v present 1 absent", strings.Repeat(" ", depth), groupSize)
 	return countArrangements(sequence[groupSize+1:], groupSizes[1:], depth+1)
 }
