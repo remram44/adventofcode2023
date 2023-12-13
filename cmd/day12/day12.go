@@ -100,19 +100,19 @@ func main() {
 
 				// Unfold the sequence
 				var sequence2 []spring
-				for i, element := range sequence {
+				for i := 0; i < 5; i += 1 {
 					if i != 0 {
 						sequence2 = append(sequence2, Unknown)
 					}
-					for j := 0; j < 5; j += 1 {
+					for _, element := range sequence {
 						sequence2 = append(sequence2, element)
 					}
 				}
 
 				// Unfold the groups
 				var groupSizes2 []int
-				for _, element := range groupSizes {
-					for j := 0; j < 5; j += 1 {
+				for i := 0; i < 5; i += 1 {
+					for _, element := range groupSizes {
 						groupSizes2 = append(groupSizes2, element)
 					}
 				}
