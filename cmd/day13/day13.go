@@ -18,12 +18,14 @@ func main() {
 	fileScanner.Split(bufio.ScanLines)
 
 	// Iterate on lines
-	sum := 0
+	sumPart1 := 0
+	sumPart2 := 0
 	var pattern [][]bool
 	for fileScanner.Scan() {
 		line := fileScanner.Text()
 		if len(line) == 0 {
-			sum += summarizePattern(pattern)
+			sumPart1 += summarizePattern(pattern, 0)
+			sumPart2 += summarizePattern(pattern, 1)
 			pattern = nil
 			continue
 		}
@@ -40,28 +42,29 @@ func main() {
 		}
 		pattern = append(pattern, patternLine)
 	}
-	sum += summarizePattern(pattern)
+	sumPart1 += summarizePattern(pattern, 0)
+	sumPart2 += summarizePattern(pattern, 1)
 
-	fmt.Println(sum)
+	fmt.Println(sumPart1)
+	fmt.Println(sumPart2)
 }
 
-func summarizePattern(pattern [][]bool) int {
+func summarizePattern(pattern [][]bool, smudges int) int {
 	sizeX := len(pattern[0])
 	sizeY := len(pattern)
 
 	// Find a vertical line of reflection
 	for symX := 1; symX < sizeX; symX += 1 {
-		matches := true
-		for i := 0; matches && symX-1-i >= 0 && symX+i < sizeX; i += 1 {
+		errors := 0
+		for i := 0; symX-1-i >= 0 && symX+i < sizeX; i += 1 {
 			for y := 0; y < sizeY; y += 1 {
 				if pattern[y][symX-1-i] != pattern[y][symX+i] {
-					matches = false
-					break
+					errors += 1
 				}
 			}
 		}
 
-		if matches {
+		if errors == smudges {
 			// Found it
 			log.Printf("  vertical line of reflection %v", symX)
 			return symX
@@ -70,17 +73,16 @@ func summarizePattern(pattern [][]bool) int {
 
 	// Find a horizontal line of reflection
 	for symY := 1; symY < sizeY; symY += 1 {
-		matches := true
-		for i := 0; matches && symY-1-i >= 0 && symY+i < sizeY; i += 1 {
+		errors := 0
+		for i := 0; symY-1-i >= 0 && symY+i < sizeY; i += 1 {
 			for x := 0; x < sizeX; x += 1 {
 				if pattern[symY-1-i][x] != pattern[symY+i][x] {
-					matches = false
-					break
+					errors += 1
 				}
 			}
 		}
 
-		if matches {
+		if errors == smudges {
 			// Found it
 			log.Printf("horizontal line of reflection %v", symY)
 			return 100 * symY
