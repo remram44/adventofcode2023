@@ -100,6 +100,7 @@ func main() {
 		grid = append(grid, row)
 	}
 
+	// Part 1: Energize from top-left corner, going right
 	fmt.Println(energize(
 		grid,
 		beam{
@@ -108,6 +109,48 @@ func main() {
 			direction: right,
 		},
 	))
+
+	// Part 2: Energize from any side
+	width := len(grid[0])
+	height := len(grid)
+
+	maxEnergized := 0
+
+	try := func(x int, y int, dir beamDirection) {
+		numEnergized := energize(
+			grid,
+			beam{
+				x:         x,
+				y:         y,
+				direction: dir,
+			},
+		)
+		if numEnergized > maxEnergized {
+			maxEnergized = numEnergized
+		}
+	}
+
+	// Left
+	for y := 0; y < height; y += 1 {
+		try(0, y, right)
+	}
+
+	// Right
+	for y := 0; y < height; y += 1 {
+		try(width-1, y, left)
+	}
+
+	// Top
+	for x := 0; x < width; x += 1 {
+		try(x, 0, down)
+	}
+
+	// Bottom
+	for x := 0; x < width; x += 1 {
+		try(x, height-1, up)
+	}
+
+	fmt.Println(maxEnergized)
 }
 
 func energize(grid [][]tile, startBeam beam) int {
@@ -197,52 +240,52 @@ func energize(grid [][]tile, startBeam beam) int {
 	}
 
 	// Print beam like in example
-	for y := 0; y < height; y += 1 {
-		line := ""
-		for x := 0; x < width; x += 1 {
-			var c rune = '?'
-			switch grid[y][x] {
-			case splitHorizontal:
-				c = '-'
-			case splitVertical:
-				c = '|'
-			case mirrorSlash:
-				c = '/'
-			case mirrorBackslash:
-				c = '\\'
-			case empty:
-				switch energized[y][x] {
-				case right:
-					c = '>'
-				case left:
-					c = '<'
-				case up:
-					c = '^'
-				case down:
-					c = 'v'
-				case 0:
-					c = '.'
-				default:
-					count := 0
-					if energized[y][x]&right != 0 {
-						count += 1
-					}
-					if energized[y][x]&left != 0 {
-						count += 1
-					}
-					if energized[y][x]&up != 0 {
-						count += 1
-					}
-					if energized[y][x]&down != 0 {
-						count += 1
-					}
-					c = rune('0' + count)
-				}
-			}
-			line += string(c)
-		}
-		log.Print(line)
-	}
+	//for y := 0; y < height; y += 1 {
+	//	line := ""
+	//	for x := 0; x < width; x += 1 {
+	//		var c rune = '?'
+	//		switch grid[y][x] {
+	//		case splitHorizontal:
+	//			c = '-'
+	//		case splitVertical:
+	//			c = '|'
+	//		case mirrorSlash:
+	//			c = '/'
+	//		case mirrorBackslash:
+	//			c = '\\'
+	//		case empty:
+	//			switch energized[y][x] {
+	//			case right:
+	//				c = '>'
+	//			case left:
+	//				c = '<'
+	//			case up:
+	//				c = '^'
+	//			case down:
+	//				c = 'v'
+	//			case 0:
+	//				c = '.'
+	//			default:
+	//				count := 0
+	//				if energized[y][x] & right != 0 {
+	//					count += 1
+	//				}
+	//				if energized[y][x] & left != 0 {
+	//					count += 1
+	//				}
+	//				if energized[y][x] & up != 0 {
+	//					count += 1
+	//				}
+	//				if energized[y][x] & down != 0 {
+	//					count += 1
+	//				}
+	//				c = rune('0' + count)
+	//			}
+	//		}
+	//		line += string(c)
+	//	}
+	//	log.Print(line)
+	//}
 
 	// Count energized tiles
 	numEnergized := 0
