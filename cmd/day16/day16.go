@@ -100,6 +100,17 @@ func main() {
 		grid = append(grid, row)
 	}
 
+	fmt.Println(energize(
+		grid,
+		beam{
+			x:         0,
+			y:         0,
+			direction: right,
+		},
+	))
+}
+
+func energize(grid [][]tile, startBeam beam) int {
 	width := len(grid[0])
 	height := len(grid)
 
@@ -110,13 +121,7 @@ func main() {
 	}
 
 	// Flood energy through
-	openList := []beam{
-		{
-			x:         0,
-			y:         0,
-			direction: right,
-		},
-	}
+	openList := []beam{startBeam}
 	appendIfInRange := func(list *[]beam, beam beam) {
 		if beam.y >= 0 && beam.y < height && beam.x >= 0 && beam.x < width {
 			*list = append(*list, beam)
@@ -248,5 +253,5 @@ func main() {
 			}
 		}
 	}
-	fmt.Println(numEnergized)
+	return numEnergized
 }
