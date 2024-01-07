@@ -30,10 +30,14 @@ func main() {
 		grid = append(grid, row)
 	}
 
-	fmt.Println(pathFind(grid))
+	// Part 1: max 3 straight
+	fmt.Println(pathFind(grid, 0, 3))
+
+	// Part 2: min 4, max 10 straight
+	fmt.Println(pathFind(grid, 4, 10))
 }
 
-func pathFind(grid [][]int) int {
+func pathFind(grid [][]int, minStraight int, maxStraight int) int {
 	width := len(grid[0])
 	height := len(grid)
 
@@ -51,7 +55,7 @@ func pathFind(grid [][]int) int {
 			y:         0,
 			dx:        0,
 			dy:        0,
-			straights: 0,
+			straights: -1,
 			totalLoss: 0,
 		},
 	}
@@ -92,8 +96,11 @@ func pathFind(grid [][]int) int {
 			if d.x == config.dx && d.y == config.dy {
 				straights = config.straights + 1
 
-				if straights > 3 {
-					// Can't go more than 3 blocks straight
+				if straights > maxStraight {
+					continue
+				}
+			} else {
+				if config.straights != -1 && config.straights < minStraight {
 					continue
 				}
 			}
