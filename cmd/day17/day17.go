@@ -5,7 +5,6 @@ import "fmt"
 import "log"
 import "os"
 import "slices"
-import "strconv"
 
 func main() {
 	// Open the input file
@@ -38,10 +37,6 @@ func pathFind(grid [][]int) int {
 	width := len(grid[0])
 	height := len(grid)
 
-	type pos struct {
-		x int
-		y int
-	}
 	type configuration struct {
 		x         int
 		y         int
@@ -49,7 +44,6 @@ func pathFind(grid [][]int) int {
 		dy        int
 		straights int
 		totalLoss int
-		path      []pos
 	}
 	openList := []configuration{
 		{
@@ -59,7 +53,6 @@ func pathFind(grid [][]int) int {
 			dy:        0,
 			straights: 0,
 			totalLoss: 0,
-			path:      []pos{{x: 0, y: 0}},
 		},
 	}
 	closedList := make(map[string]struct{})
@@ -67,7 +60,6 @@ func pathFind(grid [][]int) int {
 		// Pop last element
 		config := openList[len(openList)-1]
 		openList = openList[0 : len(openList)-1]
-		log.Printf("open configs: %v min loss: %v", len(openList), config.totalLoss)
 
 		key := fmt.Sprintf("%v-%v-%v-%v-%v", config.x, config.y, config.dx, config.dy, config.straights)
 		_, closed := closedList[key]
@@ -78,29 +70,6 @@ func pathFind(grid [][]int) int {
 
 		// Reached target
 		if config.x == width-1 && config.y == height-1 {
-			// Copy grid
-			var newGrid [][]int
-			for y := 0; y < height; y += 1 {
-				newGrid = append(newGrid, slices.Clone(grid[y]))
-			}
-
-			// Mark path
-			for _, pos := range config.path {
-				newGrid[pos.y][pos.x] = -1
-			}
-
-			// Print
-			for y := 0; y < height; y += 1 {
-				line := ""
-				for x := 0; x < height; x += 1 {
-					if newGrid[y][x] == -1 {
-						line += "#"
-					} else {
-						line += strconv.Itoa(newGrid[y][x])
-					}
-				}
-				log.Print(line)
-			}
 			return config.totalLoss
 		}
 
@@ -138,7 +107,6 @@ func pathFind(grid [][]int) int {
 				dx:        d.x,
 				dy:        d.y,
 				totalLoss: config.totalLoss + grid[y][x],
-				path:      append(slices.Clone(config.path), pos{x: x, y: y}),
 			}
 
 			// Find insertion point such that openList is in decreasing order of totalLoss
