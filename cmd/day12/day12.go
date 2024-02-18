@@ -53,6 +53,71 @@ func main() {
 	var sumOfArrangementsPart1 int64 = 0
 	var sumOfArrangementsPart2 int64 = 0
 
+	processLine := func(line string) (int, int) {
+		// Read sequence of empty/present/unknown springs
+		var sequence []spring
+		pos := 0
+		for pos < len(line) && line[pos] != ' ' {
+			switch line[pos] {
+			case '.':
+				sequence = append(sequence, Empty)
+			case '#':
+				sequence = append(sequence, Present)
+			case '?':
+				sequence = append(sequence, Unknown)
+			case ' ':
+			default:
+				log.Fatalf("Unexpected character %v", line[pos])
+			}
+			pos += 1
+		}
+
+		// Read list of groups
+		var groupSizes []int
+		for pos < len(line) {
+			if line[pos] != ' ' && line[pos] != ',' {
+				log.Fatalf("Invalid separator %v", line[pos])
+			}
+			pos += 1
+			var num int
+			pos, num = aoc.ReadNumber(line, pos)
+			groupSizes = append(groupSizes, num)
+		}
+
+		// Find arrangements for part 1
+		//log.Print(line)
+		//log.Printf("%v -> %v", line, arrangements1)
+		//log.Print()
+		arrangements1 := countArrangements(sequence, groupSizes, 0, make(map[string]int))
+
+		// Unfold the sequence
+		var sequence2 []spring
+		for i := 0; i < 5; i += 1 {
+			if i != 0 {
+				sequence2 = append(sequence2, Unknown)
+			}
+			for _, element := range sequence {
+				sequence2 = append(sequence2, element)
+			}
+		}
+
+		// Unfold the groups
+		var groupSizes2 []int
+		for i := 0; i < 5; i += 1 {
+			for _, element := range groupSizes {
+				groupSizes2 = append(groupSizes2, element)
+			}
+		}
+
+		// Find arrangements for part 2
+		//log.Printf("%v x5", line)
+		arrangements2 := countArrangements(sequence2, groupSizes2, 0, make(map[string]int))
+		//log.Printf("%v x5 -> %v", line, arrangements2)
+		//log.Print()
+
+		return arrangements1, arrangements2
+	}
+
 	// Create the processing threads
 	numCPU := runtime.GOMAXPROCS(0)
 	log.Printf("Starting %v goroutines", numCPU)
@@ -61,67 +126,9 @@ func main() {
 			for {
 				line := <-lineInputs
 
-				// Read sequence of empty/present/unknown springs
-				var sequence []spring
-				pos := 0
-				for pos < len(line) && line[pos] != ' ' {
-					switch line[pos] {
-					case '.':
-						sequence = append(sequence, Empty)
-					case '#':
-						sequence = append(sequence, Present)
-					case '?':
-						sequence = append(sequence, Unknown)
-					case ' ':
-					default:
-						log.Fatalf("Unexpected character %v", line[pos])
-					}
-					pos += 1
-				}
+				arrangements1, arrangements2 := processLine(line)
 
-				// Read list of groups
-				var groupSizes []int
-				for pos < len(line) {
-					if line[pos] != ' ' && line[pos] != ',' {
-						log.Fatalf("Invalid separator %v", line[pos])
-					}
-					pos += 1
-					var num int
-					pos, num = aoc.ReadNumber(line, pos)
-					groupSizes = append(groupSizes, num)
-				}
-
-				// Find arrangements for part 1
-				//log.Print(line)
-				//log.Printf("%v -> %v", line, arrangements1)
-				//log.Print()
-				arrangements1 := countArrangements(sequence, groupSizes, 0, make(map[string]int))
 				atomic.AddInt64(&sumOfArrangementsPart1, int64(arrangements1))
-
-				// Unfold the sequence
-				var sequence2 []spring
-				for i := 0; i < 5; i += 1 {
-					if i != 0 {
-						sequence2 = append(sequence2, Unknown)
-					}
-					for _, element := range sequence {
-						sequence2 = append(sequence2, element)
-					}
-				}
-
-				// Unfold the groups
-				var groupSizes2 []int
-				for i := 0; i < 5; i += 1 {
-					for _, element := range groupSizes {
-						groupSizes2 = append(groupSizes2, element)
-					}
-				}
-
-				// Find arrangements for part 2
-				//log.Printf("%v x5", line)
-				arrangements2 := countArrangements(sequence2, groupSizes2, 0, make(map[string]int))
-				//log.Printf("%v x5 -> %v", line, arrangements2)
-				//log.Print()
 				atomic.AddInt64(&sumOfArrangementsPart2, int64(arrangements2))
 
 				arrangementsWg.Done()
